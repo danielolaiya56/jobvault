@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JobVault — Career Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --ink: #0f0e0c;
+  --cream: #faf8f4;
+  --warm: #f2ede4;
+  --gold: #b8860b;
+  --gold-light: #d4a843;
+  --gold-glow: rgba(184,134,11,0.12);
+  --sage: #4a5e4a;
+  --text: #2c2a27;
+  --muted: #8c8578;
+  --border: #e8e2d8;
+  --white: #ffffff;
+  --error: #c0392b;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--cream); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+/* ── SPLIT LAYOUT ── */
+.layout { display: grid; grid-template-columns: 400px 1fr; min-height: 100vh; }
+
+/* ── LEFT PANEL ── */
+.left-panel {
+  background: var(--ink);
+  position: sticky; top: 0; height: 100vh;
+  display: flex; flex-direction: column; padding: 48px 40px;
+  overflow: hidden;
+}
+.left-panel::before {
+  content: ''; position: absolute; top: -100px; right: -100px;
+  width: 340px; height: 340px; border-radius: 50%;
+  border: 1px solid rgba(184,134,11,0.18);
+}
+.left-panel::after {
+  content: ''; position: absolute; bottom: -60px; left: -60px;
+  width: 220px; height: 220px; border-radius: 50%;
+  border: 1px solid rgba(184,134,11,0.1);
+}
+.logo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 56px; position: relative; z-index: 1; }
+.logo-box { width: 36px; height: 36px; border: 1.5px solid var(--gold); border-radius: 8px; display: grid; place-items: center; }
+.logo-box svg { width: 17px; height: 17px; stroke: var(--gold); }
+.logo-text { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700; color: var(--white); letter-spacing: 2px; text-transform: uppercase; }
+
+.panel-body { flex: 1; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; }
+.panel-tag { font-size: 0.65rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 18px; }
+.panel-heading { font-family: 'Cormorant Garamond', serif; font-size: 3rem; font-weight: 700; color: var(--white); line-height: 1.08; letter-spacing: -0.5px; margin-bottom: 20px; }
+.panel-heading em { font-style: italic; color: var(--gold-light); }
+.panel-desc { font-size: 0.84rem; color: rgba(255,255,255,0.4); line-height: 1.75; max-width: 280px; margin-bottom: 40px; }
+
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 40px; }
+.stat { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 16px; }
+.stat-n { font-family: 'Cormorant Garamond', serif; font-size: 1.9rem; font-weight: 700; color: var(--gold-light); line-height: 1; margin-bottom: 4px; }
+.stat-l { font-size: 0.68rem; color: rgba(255,255,255,0.3); letter-spacing: 0.5px; }
+
+.ps { display: flex; flex-direction: column; }
+.ps-row { display: flex; align-items: center; gap: 14px; padding: 11px 0; position: relative; }
+.ps-row:not(:last-child)::after { content: ''; position: absolute; left: 12px; top: 38px; width: 1px; height: calc(100% - 12px); background: rgba(255,255,255,0.08); }
+.ps-row.done:not(:last-child)::after { background: var(--gold); }
+.ps-dot { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.18); display: grid; place-items: center; flex-shrink: 0; position: relative; z-index: 1; transition: all 0.3s; background: transparent; }
+.ps-dot span { font-size: 0.65rem; font-weight: 700; color: rgba(255,255,255,0.3); }
+.ps-row.active .ps-dot { border-color: var(--gold); background: var(--gold); }
+.ps-row.active .ps-dot span { color: var(--ink); }
+.ps-row.done .ps-dot { border-color: var(--gold); background: var(--gold); }
+.ps-row.done .ps-dot span { color: var(--ink); }
+.ps-lbl { font-size: 0.8rem; color: rgba(255,255,255,0.28); transition: color 0.3s; }
+.ps-row.active .ps-lbl { color: rgba(255,255,255,0.9); font-weight: 600; }
+.ps-row.done .ps-lbl { color: var(--gold); }
+
+/* ── RIGHT PANEL ── */
+.right-panel { background: var(--cream); padding: 64px 72px; display: flex; flex-direction: column; justify-content: center; }
+.form-inner { max-width: 520px; width: 100%; }
+
+/* ── FORM PAGES ── */
+.form-page { display: none; animation: slideIn 0.38s cubic-bezier(0.16,1,0.3,1); }
+.form-page.active { display: block; }
+@keyframes slideIn { from { opacity:0; transform:translateX(18px); } to { opacity:1; transform:translateX(0); } }
+
+.form-top { margin-bottom: 36px; }
+.form-eyebrow { font-size: 0.65rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.form-eyebrow::before { content: ''; width: 20px; height: 1.5px; background: var(--gold); display: inline-block; }
+.form-title { font-family: 'Cormorant Garamond', serif; font-size: 2.6rem; font-weight: 700; line-height: 1.1; letter-spacing: -0.5px; margin-bottom: 10px; }
+.form-sub { font-size: 0.86rem; color: var(--muted); line-height: 1.6; }
+
+/* Fields */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.fg { display: flex; flex-direction: column; gap: 7px; }
+.fg.full { grid-column: 1/-1; }
+.flabel { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+.fi-wrap { position: relative; }
+.fi-wrap.ico input { padding-left: 42px; }
+.fi-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.fi-icon svg { width: 16px; height: 16px; }
+input, select, textarea {
+  width: 100%; background: var(--white); border: 1.5px solid var(--border); border-radius: 10px;
+  color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.92rem;
+  padding: 13px 16px; outline: none; transition: all 0.2s; appearance: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 4px var(--gold-glow); background: var(--white); }
+input::placeholder, textarea::placeholder { color: #ccc; font-size: 0.88rem; }
+textarea { resize: vertical; min-height: 128px; line-height: 1.65; }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%238c8578' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer; }
+
+/* Upload */
+.upload-zone { border: 2px dashed var(--border); border-radius: 14px; padding: 44px 20px; text-align: center; cursor: pointer; transition: all 0.25s; position: relative; background: var(--white); }
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--gold); background: var(--gold-glow); }
+.upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; padding: 0; border: none; background: none; }
+.upload-circle { width: 60px; height: 60px; background: var(--warm); border-radius: 50%; display: grid; place-items: center; margin: 0 auto 16px; border: 1px solid var(--border); }
+.upload-circle svg { width: 24px; height: 24px; stroke: var(--gold); }
+.upload-zone h4 { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; }
+.upload-zone p { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+.s3-pill { display: inline-flex; align-items: center; gap: 5px; background: rgba(74,94,74,0.08); border: 1px solid rgba(74,94,74,0.15); color: var(--sage); font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 10px; border-radius: 40px; margin-top: 12px; }
+
+.file-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.fc { display: flex; align-items: center; gap: 13px; background: var(--white); border: 1.5px solid var(--border); border-radius: 12px; padding: 13px 16px; transition: border-color 0.2s; }
+.fc:hover { border-color: var(--gold); }
+.fc-icon { width: 38px; height: 38px; background: var(--warm); border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; }
+.fc-icon svg { width: 19px; height: 19px; stroke: var(--gold); }
+.fc-info { flex: 1; min-width: 0; }
+.fc-name { font-size: 0.86rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fc-meta { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+.fc-rm { background: none; border: none; cursor: pointer; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); transition: all 0.2s; flex-shrink: 0; }
+.fc-rm:hover { background: #fee2e2; color: var(--error); }
+.fc-rm svg { width: 13px; height: 13px; }
+
+/* Review */
+.rv-block { margin-bottom: 26px; }
+.rv-title { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--gold); padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.rv-title::before { content: ''; width: 16px; height: 1.5px; background: var(--gold); }
+.rv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rv-f { }
+.rv-f.full { grid-column: 1/-1; }
+.rv-l { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 2px; }
+.rv-v { font-size: 0.88rem; font-weight: 500; }
+
+/* Progress */
+.up-progress { display: none; margin-top: 18px; }
+.up-label { font-size: 0.78rem; color: var(--muted); margin-bottom: 7px; display: flex; justify-content: space-between; }
+.up-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.up-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); width: 0%; transition: width 0.35s; }
+
+/* Buttons */
+.btn-row { display: flex; justify-content: space-between; align-items: center; margin-top: 36px; gap: 12px; }
+.btn { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.86rem; font-weight: 700; padding: 14px 30px; border-radius: 10px; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; letter-spacing: 0.2px; }
+.btn-dark { background: var(--ink); color: var(--white); }
+.btn-dark:hover { background: #2a2723; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(15,14,12,0.22); }
+.btn-outline { background: transparent; color: var(--text); border: 1.5px solid var(--border); }
+.btn-outline:hover { border-color: var(--ink); }
+.btn-gold { background: var(--gold); color: var(--white); }
+.btn-gold:hover { background: #a5780a; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(184,134,11,0.35); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+.spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Success */
+.success-screen { display: none; }
+.success-screen.active { display: block; animation: slideIn 0.5s cubic-bezier(0.16,1,0.3,1); }
+.success-ring { width: 92px; height: 92px; border-radius: 50%; background: var(--warm); border: 2px solid var(--gold); display: grid; place-items: center; margin-bottom: 30px; position: relative; }
+.success-ring::after { content: ''; position: absolute; inset: -8px; border-radius: 50%; border: 1px solid rgba(184,134,11,0.2); }
+.success-ring svg { width: 42px; height: 42px; stroke: var(--gold); }
+.ref-box { display: inline-flex; align-items: center; gap: 14px; background: var(--ink); border-radius: 12px; padding: 16px 26px; margin: 22px 0; }
+.ref-lbl { font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 4px; }
+.ref-id { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 700; color: var(--gold-light); letter-spacing: 2px; }
+.info-box { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; display: flex; gap: 13px; margin: 0 0 30px; }
+.info-box-icon { color: var(--gold); flex-shrink: 0; margin-top: 1px; }
+.info-box-icon svg { width: 17px; height: 17px; }
+.info-box-text { font-size: 0.83rem; color: var(--muted); line-height: 1.65; }
+
+/* Toast */
+#toast { position: fixed; bottom: 28px; right: 28px; background: var(--ink); color: var(--white); padding: 15px 20px; border-radius: 12px; font-size: 0.83rem; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; z-index: 999; max-width: 320px; line-height: 1.5; border-left: 3px solid var(--error); }
+#toast.show { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 960px) {
+  .layout { grid-template-columns: 1fr; }
+  .left-panel { position: relative; height: auto; padding: 36px 28px; }
+  .panel-heading { font-size: 2.2rem; }
+  .stats { display: none; }
+  .right-panel { padding: 40px 28px; }
+  .form-inner { max-width: 100%; }
+}
+@media (max-width: 560px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .rv-grid { grid-template-columns: 1fr; }
+  .form-title { font-size: 2rem; }
+  .right-panel { padding: 32px 20px; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- LEFT -->
+  <aside class="left-panel">
+    <div class="logo-row">
+      <div class="logo-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+          <rect x="2" y="7" width="20" height="14" rx="2"/>
+          <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+          <line x1="12" y1="12" x2="12" y2="16"/>
+          <line x1="10" y1="14" x2="14" y2="14"/>
+        </svg>
+      </div>
+      <span class="logo-text">JobVault</span>
+    </div>
+
+    <div class="panel-body">
+      <div class="panel-tag">Career Portal</div>
+      <h2 class="panel-heading">Land your<br/><em>dream role</em><br/>today.</h2>
+      <p class="panel-desc">We connect exceptional talent with world-class opportunities. Every application is personally reviewed.</p>
+
+      <div class="stats">
+        <div class="stat"><div class="stat-n">2,400+</div><div class="stat-l">Open Positions</div></div>
+        <div class="stat"><div class="stat-n">94%</div><div class="stat-l">Placement Rate</div></div>
+        <div class="stat"><div class="stat-n">48h</div><div class="stat-l">Response Time</div></div>
+        <div class="stat"><div class="stat-n">500+</div><div class="stat-l">Partner Companies</div></div>
+      </div>
+
+      <div class="ps">
+        <div class="ps-row active" id="ps1"><div class="ps-dot"><span>1</span></div><span class="ps-lbl">Personal Information</span></div>
+        <div class="ps-row" id="ps2"><div class="ps-dot"><span>2</span></div><span class="ps-lbl">Job Details</span></div>
+        <div class="ps-row" id="ps3"><div class="ps-dot"><span>3</span></div><span class="ps-lbl">Resume & Documents</span></div>
+        <div class="ps-row" id="ps4"><div class="ps-dot"><span>4</span></div><span class="ps-lbl">Review & Submit</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT -->
+  <main class="right-panel">
+    <div class="form-inner">
+
+      <!-- PAGE 1 -->
+      <div class="form-page active" id="page1">
+        <div class="form-top">
+          <div class="form-eyebrow">Step 1 of 4</div>
+          <h1 class="form-title">Personal<br/>Information</h1>
+          <p class="form-sub">Start with the basics. Fields marked * are required.</p>
+        </div>
+        <div class="grid2">
+          <div class="fg">
+            <label class="flabel">First Name *</label>
+            <div class="fi-wrap ico">
+              <span class="fi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+              <input id="firstName" placeholder="John"/>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="flabel">Last Name *</label>
+            <div class="fi-wrap"><input id="lastName" placeholder="Doe"/></div>
+          </div>
+          <div class="fg full">
+            <label class="flabel">Email Address *</label>
+            <div class="fi-wrap ico">
+              <span class="fi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+              <input type="email" id="email" placeholder="john.doe@email.com"/>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="flabel">Phone Number *</label>
+            <div class="fi-wrap ico">
+              <span class="fi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></span>
+              <input type="tel" id="phone" placeholder="+234 800 000 0000"/>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="flabel">Date of Birth</label>
+            <div class="fi-wrap"><input type="date" id="dob"/></div>
+          </div>
+          <div class="fg">
+            <label class="flabel">Gender</label>
+            <select id="gender">
+              <option value="">Select gender</option>
+              <option>Male</option><option>Female</option>
+              <option>Non-binary</option><option>Prefer not to say</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flabel">Nationality</label>
+            <select id="nationality">
+              <option value="">Select nationality</option>
+              <option>Nigerian</option><option>Ghanaian</option><option>Kenyan</option>
+              <option>South African</option><option>British</option><option>American</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <span></span>
+          <button class="btn btn-dark" onclick="goTo(2)">
+            Next Step
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE 2 -->
+      <div class="form-page" id="page2">
+        <div class="form-top">
+          <div class="form-eyebrow">Step 2 of 4</div>
+          <h1 class="form-title">Job<br/>Details</h1>
+          <p class="form-sub">Tell us the role you want and what makes you stand out.</p>
+        </div>
+        <div class="grid2">
+          <div class="fg full">
+            <label class="flabel">Position / Job Title *</label>
+            <div class="fi-wrap ico">
+              <span class="fi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></span>
+              <input id="jobTitle" placeholder="e.g. Senior Software Engineer"/>
+            </div>
+          </div>
+          <div class="fg full">
+            <label class="flabel">LinkedIn Profile URL</label>
+            <div class="fi-wrap ico">
+              <span class="fi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></span>
+              <input id="linkedin" placeholder="https://linkedin.com/in/yourname"/>
+            </div>
+          </div>
+          <div class="fg full">
+            <label class="flabel">Cover Letter</label>
+            <textarea id="coverLetter" placeholder="What makes you the right person for this role? Share your story and what sets you apart..."></textarea>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="goTo(1)">← Back</button>
+          <button class="btn btn-dark" onclick="goTo(3)">Next Step →</button>
+        </div>
+      </div>
+
+      <!-- PAGE 3 -->
+      <div class="form-page" id="page3">
+        <div class="form-top">
+          <div class="form-eyebrow">Step 3 of 4</div>
+          <h1 class="form-title">Resume &<br/>Documents</h1>
+          <p class="form-sub">Upload your CV and supporting files. Secured in AWS S3.</p>
+        </div>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="handleFiles(this.files)"/>
+          <div class="upload-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <h4>Drop your CV / Resume here</h4>
+          <p>PDF, DOC, DOCX · Max 10MB per file<br/>Or click to browse files</p>
+          <span class="s3-pill">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Secured by AWS S3
+          </span>
+        </div>
+        <div class="file-list" id="fileList"></div>
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="goTo(2)">← Back</button>
+          <button class="btn btn-dark" onclick="goTo(4)">Review →</button>
+        </div>
+      </div>
+
+      <!-- PAGE 4 -->
+      <div class="form-page" id="page4">
+        <div class="form-top">
+          <div class="form-eyebrow">Step 4 of 4</div>
+          <h1 class="form-title">Review &<br/>Submit</h1>
+          <p class="form-sub">Check everything below before sending your application.</p>
+        </div>
+        <div id="reviewContent"></div>
+        <div class="up-progress" id="upProgress">
+          <div class="up-label"><span id="upLabel">Preparing...</span><span id="upPct">0%</span></div>
+          <div class="up-bar"><div class="up-fill" id="upFill"></div></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="goTo(3)">← Back</button>
+          <button class="btn btn-gold" id="submitBtn" onclick="submitForm()">
+            <span id="submitText">Submit Application</span>
+            <div class="spinner" id="spinner"></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- SUCCESS -->
+      <div class="success-screen" id="successScreen">
+        <div class="success-ring">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="form-eyebrow">Application Submitted</div>
+        <h1 class="form-title" style="margin-bottom:12px">You're in<br/>the vault.</h1>
+        <p class="form-sub">Your application has been received and is under review.</p>
+        <div class="ref-box">
+          <div>
+            <div class="ref-lbl">Reference ID</div>
+            <div class="ref-id" id="successId">JV-XXXXXXXX</div>
+          </div>
+        </div>
+        <div class="info-box">
+          <div class="info-box-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="info-box-text">Our team will review your application and reach out to <strong id="successEmail">your email</strong> within <strong>48 business hours</strong>. Keep your reference ID for follow-up.</div>
+        </div>
+        <button class="btn btn-dark" onclick="resetForm()">Submit Another Application</button>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  let currentPage = 1;
+  let uploadedFiles = [];
+
+  function goTo(p) {
+    if (!validate(currentPage)) return;
+    document.getElementById(`page${currentPage}`).classList.remove('active');
+    for (let i = 1; i <= 4; i++) {
+      const el = document.getElementById(`ps${i}`);
+      el.classList.remove('active','done');
+      if (i < p) el.classList.add('done');
+    }
+    currentPage = p;
+    document.getElementById(`page${currentPage}`).classList.add('active');
+    document.getElementById(`ps${currentPage}`).classList.add('active');
+    if (p === 4) buildReview();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  function validate(page) {
+    const rules = {
+      1:[{id:'firstName',msg:'Please enter your first name'},{id:'lastName',msg:'Please enter your last name'},{id:'email',msg:'Please enter a valid email',check:v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)},{id:'phone',msg:'Please enter your phone number'}],
+      2:[{id:'jobTitle',msg:'Please enter the job title you are applying for'}],
+      3:[],4:[]
+    };
+    for(const r of (rules[page]||[])){
+      const el=document.getElementById(r.id);
+      const val=el?.value.trim()||'';
+      if(r.check?!r.check(val):!val){showToast(r.msg);el?.focus();return false;}
+    }
+    return true;
+  }
+
+  function fmtBytes(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
+
+  function handleFiles(files){
+    for(const f of files){
+      if(f.size>10*1024*1024){showToast(`${f.name} exceeds 10MB`);continue;}
+      uploadedFiles.push(f);
+      const idx=uploadedFiles.length-1;
+      const d=document.createElement('div');
+      d.className='fc';d.id=`fc_${idx}`;
+      d.innerHTML=`<div class="fc-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="fc-info"><div class="fc-name">${f.name}</div><div class="fc-meta">${fmtBytes(f.size)} · Ready to upload</div></div><button class="fc-rm" onclick="rmFile(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+      document.getElementById('fileList').appendChild(d);
+    }
+  }
+
+  function rmFile(idx){uploadedFiles.splice(idx,1);document.getElementById(`fc_${idx}`)?.remove();}
+
+  function buildReview(){
+    document.getElementById('reviewContent').innerHTML=`
+      <div class="rv-block"><div class="rv-title">Personal Information</div><div class="rv-grid">
+        <div class="rv-f"><div class="rv-l">Full Name</div><div class="rv-v">${g('firstName')} ${g('lastName')}</div></div>
+        <div class="rv-f"><div class="rv-l">Date of Birth</div><div class="rv-v">${g('dob')||'—'}</div></div>
+        <div class="rv-f"><div class="rv-l">Email</div><div class="rv-v">${g('email')}</div></div>
+        <div class="rv-f"><div class="rv-l">Phone</div><div class="rv-v">${g('phone')}</div></div>
+        <div class="rv-f"><div class="rv-l">Gender</div><div class="rv-v">${g('gender')||'—'}</div></div>
+        <div class="rv-f"><div class="rv-l">Nationality</div><div class="rv-v">${g('nationality')||'—'}</div></div>
+      </div></div>
+      <div class="rv-block"><div class="rv-title">Job Details</div><div class="rv-grid">
+        <div class="rv-f full"><div class="rv-l">Position Applied For</div><div class="rv-v">${g('jobTitle')}</div></div>
+        <div class="rv-f full"><div class="rv-l">LinkedIn</div><div class="rv-v">${g('linkedin')||'—'}</div></div>
+        ${g('coverLetter')?`<div class="rv-f full"><div class="rv-l">Cover Letter</div><div class="rv-v" style="font-size:0.83rem;color:var(--muted);line-height:1.6">${g('coverLetter').substring(0,180)}${g('coverLetter').length>180?'…':''}</div></div>`:''}
+      </div></div>
+      <div class="rv-block"><div class="rv-title">Documents</div>
+        <div class="rv-f"><div class="rv-l">Files Selected</div><div class="rv-v">${uploadedFiles.length?uploadedFiles.map(f=>f.name).join(', '):'No files selected'}</div></div>
+      </div>`;
+  }
+
+  function g(id){return document.getElementById(id)?.value.trim()||'';}
+
+  async function submitForm(){
+    const btn=document.getElementById('submitBtn');
+    const spinner=document.getElementById('spinner');
+    const text=document.getElementById('submitText');
+    const prog=document.getElementById('upProgress');
+    const fill=document.getElementById('upFill');
+    const lbl=document.getElementById('upLabel');
+    const pct=document.getElementById('upPct');
+    btn.disabled=true;spinner.style.display='block';text.textContent='Uploading...';prog.style.display='block';
+    const setP=(p,m)=>{fill.style.width=p+'%';pct.textContent=p+'%';if(m)lbl.textContent=m;};
+    try{
+      const appId=`JV-${Math.random().toString(36).substr(2,8).toUpperCase()}`;
+      const docs=[];
+      for(let i=0;i<uploadedFiles.length;i++){
+        const f=uploadedFiles[i];
+        setP(Math.round((i/uploadedFiles.length)*60),`Uploading ${f.name}…`);
+        const r=await fetch('/api/get-upload-url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:f.name,fileType:f.type,applicantId:appId,docType:'resume'})});
+        const{uploadUrl,key}=await r.json();
+        await fetch(uploadUrl,{method:'PUT',body:f,headers:{'Content-Type':f.type}});
+        docs.push({key,fileName:f.name,fileType:f.type,docType:'resume'});
+      }
+      setP(75,'Saving to database…');
+      const res=await fetch('/api/applicants',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:g('firstName'),lastName:g('lastName'),email:g('email'),phone:g('phone'),dob:g('dob'),gender:g('gender'),nationality:g('nationality'),jobTitle:g('jobTitle'),linkedin:g('linkedin'),coverLetter:g('coverLetter'),documents:docs})});
+      setP(100,'Complete!');
+      if(!res.ok){const e=await res.json();throw new Error(e.error||'Server error');}
+      const result=await res.json();
+      setTimeout(()=>showSuccess(result.applicantId),400);
+    }catch(err){
+      showToast(err.message||'Something went wrong. Please try again.');
+      btn.disabled=false;spinner.style.display='none';text.textContent='Submit Application';prog.style.display='none';
+    }
+  }
+
+  function showSuccess(id){
+    document.querySelectorAll('.form-page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('successId').textContent=id;
+    document.getElementById('successEmail').textContent=g('email');
+    document.getElementById('successScreen').classList.add('active');
+    for(let i=1;i<=4;i++){const el=document.getElementById(`ps${i}`);el.classList.remove('active');el.classList.add('done');}
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  function resetForm(){
+    document.querySelectorAll('input,textarea,select').forEach(el=>el.value='');
+    uploadedFiles=[];document.getElementById('fileList').innerHTML='';
+    document.getElementById('successScreen').classList.remove('active');
+    document.getElementById('upProgress').style.display='none';
+    currentPage=1;
+    for(let i=1;i<=4;i++){const el=document.getElementById(`ps${i}`);el.classList.remove('active','done');}
+    document.getElementById('ps1').classList.add('active');
+    document.getElementById('page1').classList.add('active');
+    const btn=document.getElementById('submitBtn');
+    btn.disabled=false;document.getElementById('spinner').style.display='none';
+    document.getElementById('submitText').textContent='Submit Application';
+  }
+
+  function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000);}
+
+  const zone=document.getElementById('uploadZone');
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('dragover');});
+  zone.addEventListener('dragleave',()=>zone.classList.remove('dragover'));
+  zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('dragover');handleFiles(e.dataTransfer.files);});
+</script>
+</body>
+</html>
